@@ -73,347 +73,331 @@ def read_report(path):
 
 
 # ============================================================
-# 卡片式 HTML 渲染器（QQ 邮箱友好）
+# 卡片式 HTML 渲染器（QQ 邮箱友好 — 完整渲染，不丢内容）
 # ============================================================
 
 CSS = """
 <style>
   body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#f5f6fa;margin:0;padding:16px;color:#2c3e50}
   .header{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:20px 24px;border-radius:12px;margin-bottom:16px}
-  .header h1{font-size:20px;margin:0 0 6px;font-weight:700}
-  .header .meta{font-size:12px;opacity:.85;line-height:1.6}
-  .card{background:#fff;border-radius:12px;padding:16px 20px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-  .card h2{font-size:16px;margin:0 0 12px;padding-bottom:8px;border-bottom:2px solid #f0f0f0}
-  .card h3{font-size:14px;margin:12px 0 8px;color:#555}
-  .stat-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
-  .stat-tag{display:inline-flex;align-items:center;gap:4px;background:#f8f9fc;border:1px solid #e8ecf1;border-radius:8px;padding:6px 12px;font-size:13px}
-  .stat-tag .num{font-size:18px;font-weight:700}
-  .stat-tag.green{border-color:#c8e6c9;background:#e8f5e9}
-  .stat-tag.red{border-color:#ffcdd2;background:#ffebee}
-  .stat-tag.blue{border-color:#bbdefb;background:#e3f2fd}
-  table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
-  th{background:#f0f1f5;padding:8px 6px;text-align:center;font-weight:600;font-size:11px;color:#666;border:1px solid #e0e0e0}
-  td{padding:7px 5px;text-align:center;border:1px solid #e0e0e0;font-size:11px}
+  .header h1{font-size:18px;margin:0 0 6px;font-weight:700}
+  .header .meta{font-size:12px;opacity:.85;line-height:1.7}
+  .card{background:#fff;border-radius:12px;padding:14px 18px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .card h2{font-size:15px;margin:0 0 10px;padding-bottom:6px;border-bottom:2px solid #f0f0f0}
+  .card h3{font-size:13px;margin:10px 0 6px;color:#555}
+  .card p,.card li{font-size:12px;line-height:1.7;margin:4px 0;color:#444}
+  .card blockquote{font-size:11px;border-left:3px solid #d0d5dd;padding:6px 10px;margin:8px 0;color:#888;background:#f9fafb;border-radius:0 6px 6px 0}
+  .card ul{padding-left:18px;margin:6px 0}
+  .card hr{border:none;border-top:1px solid #e8ecf1;margin:10px 0}
+  table{width:100%;border-collapse:collapse;font-size:11px;margin:6px 0}
+  th{background:#f0f1f5;padding:6px 4px;text-align:center;font-weight:600;font-size:10px;color:#666;border:1px solid #e0e0e0}
+  td{padding:5px 4px;text-align:center;border:1px solid #e8ecf1;font-size:10px}
   td:nth-child(2),td:nth-child(3){text-align:left}
-  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
-  .badge-yes{background:#c8e6c9;color:#2e7d32}
-  .badge-no{background:#f5f5f5;color:#bbb}
-  .badge-official{background:#e3f2fd;color:#1565c0}
+  .badge{display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600;white-space:nowrap}
+  .badge-y{background:#c8e6c9;color:#2e7d32}
+  .badge-n{background:#f5f5f5;color:#ccc}
+  .badge-st3{background:#fff9c4;color:#f57f17}
+  .badge-st2{background:#e8eaf6;color:#3949ab}
+  .badge-st1{background:#f5f5f5;color:#999}
+  .badge-off{background:#e3f2fd;color:#1565c0}
   .badge-web{background:#fff3e0;color:#e65100}
-  .badge-star3{background:#fff9c4;color:#f57f17;font-size:12px}
-  .badge-star2{background:#e8eaf6;color:#3949ab}
-  .badge-star1{background:#f5f5f5;color:#999}
-  .change-row{display:flex;gap:16px;margin:6px 0}
-  .change-item{display:flex;align-items:center;gap:4px;font-size:14px}
-  .change-item .num{font-size:22px;font-weight:800}
-  .list{font-size:12px;line-height:1.8;padding-left:16px;margin:4px 0}
-  .list li{margin-bottom:2px}
-  .insight{font-size:12px;line-height:1.7;color:#555;padding:8px 12px;background:#fafbff;border-radius:8px;border-left:3px solid #667eea}
-  .footer{text-align:center;font-size:11px;color:#aaa;padding:16px 0}
-  .highlight{background:linear-gradient(135deg,#fff3cd,#fff9c4);border-radius:4px;padding:0 2px}
-  @media(max-width:600px){body{padding:8px}.card{padding:12px}table{font-size:10px}}
+  .stat-row{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0}
+  .stat-tag{display:inline-flex;align-items:center;gap:3px;background:#f8f9fc;border:1px solid #e8ecf1;border-radius:8px;padding:5px 10px;font-size:12px}
+  .stat-tag .num{font-size:16px;font-weight:700}
+  .change-row{display:flex;gap:14px;margin:4px 0;font-size:13px}
+  .change-row .num{font-size:20px;font-weight:800}
+  .footer{text-align:center;font-size:10px;color:#bbb;padding:12px 0}
+  @media(max-width:600px){body{padding:6px}.card{padding:10px 12px}table{font-size:9px}th,td{padding:4px 2px}}
 </style>
 """
 
 
 def _render_cards(md_text):
-    """将 Markdown 日报渲染为卡片式 HTML"""
-    lines = md_text.split("\n")
+    """逐区块渲染 Markdown → 卡片 HTML，不丢任何内容"""
+    blocks = _split_blocks(md_text)
+    html = ['<html><head><meta charset="utf-8">', CSS, '</head><body>']
 
-    # 解析结构化数据
-    sections = _parse_sections(lines)
-    title = sections.get("_title", "智能求职日报")
-    meta_lines = sections.get("_meta", [])
-    h2s = sections.get("_h2", [])
-    change = sections.get("_change", {})       # 历史对比
-    hot = sections.get("_hot", [])              # 高匹配/中匹配/低匹配
+    for b in blocks:
+        kind = b["kind"]
+        content = b["content"]
+        if kind == "header_card":
+            html.append(_render_header_card(content))
+        elif kind == "h1":
+            # 非首部的 # 标题：开新卡片
+            html.append(f'<div class="card" style="padding:8px 18px"><h2 style="border:none;margin:0;font-size:15px">{_escape(content)}</h2></div>')
+        elif kind == "card":
+            html.append('<div class="card">')
+            html.append(_render_block_body(content))
+            html.append('</div>')
 
-    html = ['<html><head><meta charset="utf-8">', CSS, '</head>',
-            '<body>']
-
-    # --- 头部卡片 ---
-    html.append('<div class="header">')
-    html.append(f'<h1>{title}</h1>')
-    html.append('<div class="meta">')
-    for m in meta_lines:
-        label = _escape(m["text"])
-        html.append(f'<div>{label}</div>')
-    html.append('</div></div>')
-
-    # --- 核心统计卡片 ---
-    stats = sections.get("_stats", {})
-    if change:
-        html.append('<div class="card">')
-        html.append('<h2>📈 与昨日对比</h2>')
-        html.append('<div class="change-row">')
-        c = change
-        html.append(f'<div class="change-item"><span class="num" style="color:#4caf50">+{c["new"]}</span> 🆕 新增</div>')
-        html.append(f'<div class="change-item"><span class="num" style="color:#f44336">-{c["removed"]}</span> ❌ 下架</div>')
-        html.append(f'<div class="change-item"><span class="num" style="color:#999">{c["unchanged"]}</span> ➖ 不变</div>')
-        html.append('</div></div>')
-
-    if stats:
-        html.append('<div class="card">')
-        html.append('<h2>📊 今日概览</h2>')
-        html.append('<div class="stat-row">')
-        html.append(f'<div class="stat-tag green"><span>⭐</span><span class="num">{stats.get("star3", 0)}</span>高匹配</div>')
-        html.append(f'<div class="stat-tag blue"><span>⭐⭐</span><span class="num">{stats.get("star2", 0)}</span>中匹配</div>')
-        html.append(f'<div class="stat-tag"><span>⭐</span><span class="num">{stats.get("star1", 0)}</span>低匹配</div>')
-        html.append(f'<div class="stat-tag"><span>📋</span><span class="num">{stats.get("total", 0)}</span>岗位总数</div>')
-        html.append('</div></div>')
-
-    # --- 主表格卡片 ---
-    table_html = _render_main_table(lines)
-    if table_html:
-        html.append('<div class="card">')
-        html.append('<h2>📊 搜索结果汇总</h2>')
-        html.append(table_html)
-        html.append('</div>')
-
-    # --- 匹配度分组卡片 ---
-    if hot:
-        html.append('<div class="card">')
-        html.append('<h2>🏆 按匹配度分组</h2>')
-        for level, items in hot:
-            if not items:
-                continue
-            html.append(f'<h3>{level}</h3>')
-            html.append('<ul class="list">')
-            for item in items:
-                html.append(f'<li><b>{_escape(item.get("company",""))}</b> — {_escape(item.get("position",""))} <span style="color:#999">{_escape(item.get("location",""))}</span></li>')
-            html.append('</ul>')
-        html.append('</div>')
-
-    # --- 解读卡片 ---
-    insight = sections.get("_insight")
-    if insight:
-        html.append('<div class="card">')
-        html.append('<h2>💡 快速解读</h2>')
-        html.append('<div class="insight">')
-        for line in insight.split("\n"):
-            clean = line.strip("- ").strip()
-            if clean:
-                html.append(f'<p style="margin:4px 0">{_escape(clean)}</p>')
-        html.append('</div></div>')
-
-    # --- 页脚 ---
-    html.append('<div class="footer">')
-    html.append(f'🤖 自动日报 · {datetime.date.today()}<br>')
-    html.append('⏰ 明天 08:00 自动发送')
-    html.append('</div>')
-
+    html.append('<div class="footer">🤖 自动日报 · 每天 08:00 发送</div>')
     html.append('</body></html>')
     return "\n".join(html)
 
 
-def _parse_sections(lines):
-    """解析日报 Markdown，提取结构化数据"""
-    result = {
-        "_title": "智能求职日报",
-        "_meta": [],
-        "_stats": {},
-        "_change": {},
-        "_hot": [],
-        "_insight": "",
-        "_h2": [],
-    }
+def _split_blocks(md_text):
+    """把 Markdown 拆成区块列表。每个区块是 {'kind': ..., 'content': ...}"""
+    lines = md_text.split("\n")
+    blocks = []
 
+    # --- 第 1 步：收集头部 meta（第一个 # 标题前的所有 > 引用行） ---
+    header_title = ""
+    header_meta = []
+    i = 0
+    while i < len(lines):
+        stripped = lines[i].strip()
+        if stripped.startswith("# ") and not stripped.startswith("## "):
+            header_title = stripped[2:].strip()
+            i += 1
+            break
+        i += 1
+
+    # 收集 meta（标题后的引用行和属性行）
+    while i < len(lines):
+        stripped = lines[i].strip()
+        if stripped.startswith("> "):
+            text = stripped[2:].strip()
+            # 去掉 Markdown 加粗标记
+            text = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
+            header_meta.append(text)
+            i += 1
+        elif stripped.startswith("---"):
+            i += 1
+            break
+        elif stripped == "":
+            i += 1
+        else:
+            break
+
+    # 跳过空行和 --- 直到下一个内容
+    while i < len(lines) and (lines[i].strip() == "" or lines[i].strip() == "---"):
+        i += 1
+
+    if header_title:
+        blocks.append({"kind": "header_card", "content": {"title": header_title, "meta": header_meta}})
+
+    # --- 第 2 步：把剩余内容按 ## 标题拆成卡片 ---
     current_h2 = ""
-    current_h3 = ""
-    in_table = False
-    table_header = []
-    table_rows = []
+    current_lines = []
 
-    for i, raw_line in enumerate(lines):
-        line = raw_line.strip()
+    def flush_card():
+        nonlocal current_h2, current_lines
+        if current_lines:
+            blocks.append({"kind": "card", "content": {"heading": current_h2, "lines": list(current_lines)}})
+        current_h2 = ""
+        current_lines = []
 
-        # 主标题 (# 开头)
-        if line.startswith("# ") and not line.startswith("## "):
-            result["_title"] = line[2:].strip()
+    while i < len(lines):
+        stripped = lines[i].strip()
+
+        # 遇到 ## 标题：flush 上一个 card，开新的
+        if stripped.startswith("## "):
+            flush_card()
+            current_h2 = stripped[3:].strip()
+            i += 1
             continue
 
-        # 引用行 — 元信息
-        if line.startswith("> "):
-            text = line[2:].strip()
-            result["_meta"].append({"text": text})
-            # 提取统计数字
-            m = re.search(r"原始\s*(\d+)\s*条", text)
-            if m: result["_stats"]["total_jh"] = int(m.group(1))
+        # 遇到 # 标题（二级主标题）：也 flush，但作为 h1 块
+        if stripped.startswith("# ") and not stripped.startswith("## "):
+            flush_card()
+            blocks.append({"kind": "h1", "content": stripped[2:].strip()})
+            i += 1
+            # 跳过紧随的空行和 ---
+            while i < len(lines) and (lines[i].strip() == "" or lines[i].strip() == "---"):
+                i += 1
             continue
 
-        # 二级标题
-        if line.startswith("## "):
-            current_h2 = line[3:].strip()
-            current_h3 = ""
+        current_lines.append(lines[i])
+        i += 1
+
+    flush_card()
+
+    # --- 第 3 步：过滤空卡片 ---
+    blocks = [b for b in blocks if b["kind"] != "card" or any(l.strip() for l in b["content"]["lines"])]
+
+    return blocks
+
+
+def _render_header_card(content):
+    """渲染紫色渐变头部卡片"""
+    title = _escape(content["title"])
+    meta = content["meta"]
+
+    html = ['<div class="header"><h1>', title, '</h1>']
+    if meta:
+        html.append('<div class="meta">')
+        for m in meta:
+            html.append(f'<div>{m}</div>')
+        html.append('</div>')
+    html.append('</div>')
+    return "".join(html)
+
+
+def _render_block_body(content):
+    """渲染一个卡片内部的全部内容（段落、表格、列表、引用等）"""
+    heading = content["heading"]
+    lines = content["lines"]
+
+    html = []
+    if heading:
+        html.append(f'<h2>{_escape(heading)}</h2>')
+
+    i = 0
+    while i < len(lines):
+        stripped = lines[i].strip()
+
+        # 空行
+        if stripped == "":
+            i += 1
             continue
 
         # 三级标题
-        if line.startswith("### "):
-            current_h3 = line[4:].strip()
+        if stripped.startswith("### "):
+            html.append(f'<h3>{_escape(stripped[4:].strip())}</h3>')
+            i += 1
             continue
 
-        # 表格
-        if line.startswith("|"):
-            if not in_table:
-                in_table = True
-                table_header = [c.strip() for c in line.strip("|").split("|")]
-            elif not table_header:
-                continue
-            elif "---" in line:
-                pass
-            else:
-                cells = [c.strip() for c in line.strip("|").split("|")]
-                table_rows.append(cells)
+        # 引用
+        if stripped.startswith("> "):
+            quote_lines = []
+            while i < len(lines) and lines[i].strip().startswith("> "):
+                t = lines[i].strip()[2:].strip()
+                t = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", t)
+                quote_lines.append(t)
+                i += 1
+            html.append('<blockquote>' + "<br>".join(quote_lines) + '</blockquote>')
             continue
+
+        # Markdown 表格（连续的 | 行）
+        if stripped.startswith("|"):
+            table_html, consumed = _render_table_block(lines, i)
+            html.append(table_html)
+            i += consumed
+            continue
+
+        # 无序列表
+        if stripped.startswith("- ") or stripped.startswith("* "):
+            list_items = []
+            while i < len(lines) and (lines[i].strip().startswith("- ") or lines[i].strip().startswith("* ")):
+                item = lines[i].strip()[2:]
+                item = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", item)
+                list_items.append(item)
+                i += 1
+            html.append('<ul>' + "".join(f'<li>{li}</li>' for li in list_items) + '</ul>')
+            continue
+
+        # 普通段落（连续的非空、非标记行合并为一 <p>）
+        para_lines = []
+        while i < len(lines) and lines[i].strip() != "" and not _is_block_start(lines[i].strip()):
+            t = lines[i].strip()
+            t = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", t)
+            t = re.sub(r"`(.+?)`", r"<code>\1</code>", t)
+            para_lines.append(t)
+            i += 1
+        if para_lines:
+            html.append('<p>' + "<br>".join(para_lines) + '</p>')
         else:
-            in_table = False
+            i += 1
 
-        # 变化统计
-        if "与昨日对比" in current_h2:
-            m = re.search(r"🆕.*?新增.*?(\d+)", line)
-            if m: result["_change"]["new"] = int(m.group(1))
-            m = re.search(r"❌.*?下架.*?(\d+)", line)
-            if m: result["_change"]["removed"] = int(m.group(1))
-            m = re.search(r"➖.*?不变.*?(\d+)", line)
-            if m: result["_change"]["unchanged"] = int(m.group(1))
-            continue
+    return "".join(html)
 
-        # 匹配度统计
-        if "高匹配" in current_h2 or "中匹配" in current_h2 or "低匹配" in current_h2:
-            m = re.search(r"(\d+)\s*条", current_h2 + line)
-            k = "高" if "高" in current_h2 else ("中" if "中" in current_h2 else "低")
-            if m:
-                result["_stats"][f"star{k}"] = result["_stats"].get(f"star{k}", 0) + int(m.group(1))
 
-        # 高/中/低匹配列表（解析新增/下架列表）
-        if re.match(r"^\d+\.\s", line):
-            parts = line.split(". ", 1)[1]
-            if "—" in parts:
-                company, position = parts.split("—", 1)
-                result.setdefault("_hot_items", []).append({
-                    "company": company.strip(),
-                    "position": position.strip(),
-                    "level": current_h3 if "新增" in current_h3 else ("已下架" if "下架" in current_h3 else current_h2),
-                })
+def _is_block_start(stripped):
+    """判断是否为新块起始"""
+    return (stripped.startswith("### ") or stripped.startswith("> ") or
+            stripped.startswith("|") or stripped.startswith("- ") or
+            stripped.startswith("* ") or stripped.startswith("## "))
 
-        # 快速解读
-        if "快速解读" in current_h2 and line and not line.startswith("#"):
-            result["_insight"] += line + "\n"
 
-    # 解析主表格数据
-    if table_rows:
-        total = len(table_rows)
-        star3 = sum(1 for r in table_rows if any("⭐⭐⭐" in c for c in r))
-        star2 = sum(1 for r in table_rows if any("⭐⭐" in c and "⭐⭐⭐" not in c for c in r))
-        star1 = sum(1 for r in table_rows if any("⭐" in c and "⭐⭐" not in c for c in r))
-        result["_stats"]["total"] = total
-        result["_stats"]["star3"] = result["_stats"].get("star3", 0) or star3
-        result["_stats"]["star2"] = result["_stats"].get("star2", 0) or star2
-        result["_stats"]["star1"] = result["_stats"].get("star1", 0) or star1
+def _render_table_block(lines, start_idx):
+    """从 start_idx 开始渲染一个表格块。返回 (html, consumed_rows)。"""
+    rows = []
+    i = start_idx
 
+    # 收集所有连续的表格行
+    header_cells = None
+    sep_row = None
+    data_rows = []
+
+    while i < len(lines) and lines[i].strip().startswith("|"):
+        cells = [c.strip() for c in lines[i].strip().strip("|").split("|")]
+        if header_cells is None:
+            header_cells = cells
+        elif any("---" in c for c in cells):
+            sep_row = cells
+        else:
+            data_rows.append(cells)
+        i += 1
+
+    consumed = i - start_idx
+    if not data_rows:
+        return "", consumed
+
+    # 推测列含义
+    cols = _infer_columns(header_cells)
+    rendered_cols = len(cols)
+
+    html = ['<table><thead><tr>']
+    for name in cols:
+        html.append(f'<th>{name}</th>')
+    html.append('</tr></thead><tbody>')
+
+    for r in data_rows:
+        html.append('<tr>')
+        for ci in range(rendered_cols):
+            val = r[ci] if ci < len(r) else ""
+            html.append(f'<td>{_fmt_cell(val, cols[ci])}</td>')
+        html.append('</tr>')
+
+    html.append('</tbody></table>')
+    return "".join(html), consumed
+
+
+def _infer_columns(header):
+    """根据表头内容推理渲染列名（精简为 QQ 邮箱友好宽度）"""
+    mapping = {
+        "#": "#", "公司": "公司", "公司/来源": "公司", "岗位": "岗位",
+        "岗位名称": "岗位", "地点": "地点", "数据来源": "来源",
+        "双休": "双休", "住宿": "住宿", "薪资": "薪资",
+        "匹配": "匹配", "关键词": "来源", "编号": "编号",
+        "关键词简述": "关键词", "结果数": "结果",
+        "有匹配结果数": "匹配数", "亮点": "备注",
+        "匹配项": "匹配项",
+    }
+    result = []
+    for h in header:
+        key = h.strip()
+        result.append(mapping.get(key, key[:4]))
     return result
 
 
-def _render_main_table(lines):
-    """渲染主搜索结果表格（带图标和徽章）"""
-    # 找到表格块
-    table_start = None
-    table_end = None
-    for i, line in enumerate(lines):
-        stripped = line.strip()
-        if table_start is None and "搜索结果汇总表" in stripped:
-            for j in range(i + 1, min(i + 20, len(lines))):
-                if lines[j].strip().startswith("|") and "公司" in lines[j]:
-                    table_start = j
-                    break
-        if table_start is not None and table_end is None:
-            if (stripped.startswith("## ") or stripped.startswith("---")) and j > table_start:
-                table_end = j
-                break
-            if not stripped.startswith("|") and stripped != "" and not stripped.startswith(">"):
-                table_end = j
-                break
-    if table_end is None and table_start is not None:
-        # 找空行或下一个 section
-        for j in range(table_start + 1, len(lines)):
-            if lines[j].strip() == "" or lines[j].strip().startswith("---") or lines[j].strip().startswith("##"):
-                table_end = j
-                break
-        if table_end is None:
-            table_end = len(lines)
+def _fmt_cell(val, col_name):
+    """格式化表格单元格（徽章、高亮等）"""
+    v = _escape(val)
 
-    if table_start is None:
-        return ""
+    # 匹配星
+    if "⭐⭐⭐" in v:
+        v = v.replace("⭐⭐⭐", "") + ' <span class="badge badge-st3">3★</span>'
+    elif "⭐⭐" in v:
+        v = v.replace("⭐⭐", "") + ' <span class="badge badge-st2">2★</span>'
+    elif "⭐" in v and "⭐⭐" not in v:
+        v = v.replace("⭐", "") + ' <span class="badge badge-st1">1★</span>'
 
-    # 收集数据行（跳过表头和分隔行）
-    in_data = False
-    rows = []
-    for i in range(table_start, table_end):
-        line = lines[i].strip()
-        if not line.startswith("|"):
-            continue
-        cells = [c.strip() for c in line.strip("|").split("|")]
-        if any("---" in c for c in cells):
-            in_data = True
-            continue
-        if in_data and len(cells) >= 6:
-            rows.append(cells)
-
-    if not rows:
-        return ""
-
-    # 提取列
-    html = ['<table><thead><tr>',
-            '<th>公司</th><th>岗位</th><th>地点</th><th>来源</th>',
-            '<th>住宿</th><th>薪资</th><th>匹配</th></tr></thead><tbody>']
-
-    for r in rows:
-        # 列：| # | 公司(1) | 岗位(2) | 地点(3) | [数据来源(4)] | 双休 | 住宿 | 薪资 | 匹配 | 关键词 |
-        company = r[1] if len(r) > 1 else ""
-        position = r[2] if len(r) > 2 else ""
-        location = r[3] if len(r) > 3 else ""
-
-        # 判断是否有「数据来源」列
-        has_source = "数据来源" in (lines[table_start] if table_start else "")
-        src_col = 4
-        offset = 1 if has_source else 0
-        housing_col = 4 + offset
-        salary_col = 5 + offset
-        match_col = 6 + offset
-
-        source = r[4] if has_source and len(r) > 4 else "网络搜索"
-        housing = r[housing_col] if len(r) > housing_col else "❌"
-        salary = r[salary_col] if len(r) > salary_col else "❌"
-        match_raw = r[match_col] if len(r) > match_col else ""
-
-        # 匹配徽章
-        match_stars = ""
-        if "⭐⭐⭐" in match_raw:
-            match_stars = '<span class="badge badge-star3">⭐⭐⭐</span>'
-        elif "⭐⭐" in match_raw:
-            match_stars = '<span class="badge badge-star2">⭐⭐</span>'
-        elif "⭐" in match_raw:
-            match_stars = '<span class="badge badge-star1">⭐</span>'
+    # 住宿/薪资/双休 列
+    if col_name in ("住宿", "双休", "薪资"):
+        if "✅" in v:
+            v = '<span class="badge badge-y">✅</span>'
         else:
-            match_stars = '<span style="color:#ccc">—</span>'
+            v = '<span class="badge badge-n">—</span>'
 
-        # 住宿/薪资徽章
-        housing_badge = '<span class="badge badge-yes">✅</span>' if "✅" in housing else '<span class="badge badge-no">—</span>'
-        salary_badge = '<span class="badge badge-yes">✅</span>' if "✅" in salary else '<span class="badge badge-no">—</span>'
+    # 来源列
+    if col_name == "来源":
+        if "官方" in v:
+            v = '<span class="badge badge-off">🏢 官方</span>'
+        elif "网络" in v:
+            v = '<span class="badge badge-web">🌐 网络</span>'
 
-        # 数据来源徽章
-        if "官方" in source:
-            source_badge = '<span class="badge badge-official">🏢 官方</span>'
-        else:
-            source_badge = '<span class="badge badge-web">🌐 网络</span>'
-
-        html.append(f'<tr><td>{_escape(company)}</td><td>{_escape(position)}</td>'
-                    f'<td>{_escape(location)}</td><td>{source_badge}</td>'
-                    f'<td>{housing_badge}</td><td>{salary_badge}</td>'
-                    f'<td>{match_stars}</td></tr>')
-
-    html.append('</tbody></table>')
-    return "".join(html)
+    return v
 
 
 def _escape(s):
