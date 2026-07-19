@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Claude Code local config
+.claude/
+
+# Generated daily reports (user's personal job search data)
+daily_report_*.md
+
+# Error logs
+*.log
+
+# IDE / editor
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+Desktop.ini
