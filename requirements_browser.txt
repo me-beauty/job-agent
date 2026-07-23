@@ -1,0 +1,20 @@
+# Job Agent Dependencies
+# pip install -r requirements_browser.txt
+
+# Browser automation
+browser-use>=0.5.0
+playwright>=1.50.0
+
+# MCP protocol
+mcp>=1.0.0
+
+# Core
+python-dotenv>=1.0.0
+flask>=3.0.0
+markdown>=3.5.0
+
+# Match model (PyTorch)
+torch>=2.0.0
+numpy>=1.24.0
+
+# No external deps needed for: SQLite, rate limiter, logger

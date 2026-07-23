@@ -1,92 +1,185 @@
-# Job Agent
+# 🤖 Job Agent — AI-powered job search & auto-apply system
 
-> 双数据源自动化实习日报生成器 — 每天 08:00 自动搜索、去重、对比、邮件推送。
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                        Data Sources (4)                          │
+│  WebSearch ◇ jobhunt-cli (8 BigTech) ◇ browser-use ◇ history    │
+└──────────────────────┬───────────────────────────────────────────┘
+                       │
+        ┌──────────────┼──────────────┐
+        ▼              ▼              ▼
+   ┌─────────┐  ┌───────────┐  ┌──────────────┐
+   │ Claude  │  │ DeepSeek  │  │ PyTorch      │
+   │ Code    │  │ JD denoise│  │ BiLSTM match │
+   │ search  │  │ keywords  │  │ model (local) │
+   └────┬────┘  └─────┬─────┘  └──────┬───────┘
+        │             │              │
+        └──────┬──────┘              │
+               ▼                     ▼
+   ┌──────────────────┐   ┌──────────────────┐
+   │ Daily Reports    │   │ Match Scoring    │
+   │ (Precise/Quick)  │   │ (0-100 + stars)  │
+   └────────┬─────────┘   └────────┬─────────┘
+            │                      │
+            ▼                      ▼
+   ┌──────────────────────────────────────────┐
+   │            Flask Web Dashboard            │
+   │  /  Dashboard  /api/*  REST + MCP        │
+   │  Browser panel  Model panel  Task panel  │
+   └──────────────────────────────────────────┘
+            │
+   ┌────────┴────────┐
+   ▼                 ▼
+ Email (QQ SMTP)   ngrok (public URL)
+```
 
-## 功能
+---
 
-- 🔍 **双数据源**：WebSearch（7 个城市关键词）+ jobhunt-cli（8 家大厂官方招聘网站直搜）
-- 📊 **自动日报**：每日生成 Markdown 报告，含岗位汇总表、匹配度评分、按城市分类
-- 🧹 **去重 & 历史对比**：同公司同岗位合并去重，今日 vs 昨日新增/下架一目了然
-- 📧 **邮件推送**：通过 QQ 邮箱 SMTP 自动发送日报到邮箱
-- ⏰ **定时任务**：Windows 任务计划程序，每天 08:00 全自动运行
+## Environment Variables
 
-## 快速开始
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ANTHROPIC_API_KEY` | — | Claude API key |
+| `DEEPSEEK_API_KEY` | — | DeepSeek API key |
+| `JOB_AGENT_TOKEN` | `job-agent-demo-token` | API auth token |
+| `JOB_AGENT_LLM` | `claude` | Default LLM provider |
+| `LOG_LEVEL` | `INFO` | Logging level |
+| `QQ_EMAIL` | — | QQ email for SMTP |
+| `QQ_AUTH_CODE` | — | QQ email auth code |
 
-### 1. 环境要求
+---
 
-- Python 3.8+
-- [Claude Code](https://claude.ai/code) CLI
-- (可选) [jobhunt-cli](https://github.com/me-beauty/jobhunt-cli) — 启用官方招聘直搜
+## Quick Start
 
 ```bash
-pip install jobhunt-cli   # 可选，不装则只用 WebSearch
+# 1. Install deps
+pip install -r requirements_browser.txt
+playwright install chromium
+
+# 2. Start
+start_all.bat
+
+# Or manually:
+python web_server.py          # Flask :5000
+ngrok http 5000               # public tunnel
 ```
 
-### 2. 安装定时任务
+---
 
-右键 `安装定时任务.bat` → **以管理员身份运行**。
+## API Reference
 
-### 3. 配置邮件（可选）
+All `/api/*` routes require `Authorization: Bearer <token>`.
 
+### Browser Automation
 ```bash
-setx QQ_EMAIL "你的QQ号@qq.com"
-setx QQ_AUTH_CODE "你的QQ邮箱授权码"
+# Search jobs
+curl -X POST http://127.0.0.1:5000/api/search \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"keyword":"data science intern","city":"Beijing"}'
+
+# Apply to job (score filter: skip if < 70)
+curl -X POST http://127.0.0.1:5000/api/apply \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{"url":"https://...","match_score":85}'
+
+# Scrape to CSV
+curl -X POST http://127.0.0.1:5000/api/scrape \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{"url":"https://...","output_name":"jobs_export"}'
 ```
 
-获取授权码：QQ邮箱 → 设置 → 账户 → POP3/SMTP服务 → 开启。
+### Match Model
+```bash
+# Train model
+curl -X POST http://127.0.0.1:5000/api/train_match_model \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{"epochs":30,"lr":0.001}'
 
-### 4. 手动运行
-
-| 模式 | 命令 | 说明 |
-|------|------|------|
-| 快速模式 | `python daily_job_search_quick.py` | 只看摘要，不点链接，适合每日自动 |
-| 精准模式 | `python daily_job_search.py` | 点开链接核实细节，适合手动深挖 |
-| 发送邮件 | `python send_email.py` | 发送当天日报到 QQ 邮箱 |
-
-## 项目结构
-
-```
-job-agent/
-├── daily_job_search_quick.py    # 快速模式（定时任务入口）
-├── daily_job_search.py          # 精准模式（手动触发）
-├── report_utils.py              # 共享工具（去重/对比/jobhunt）
-├── send_email.py                # QQ 邮箱 SMTP 发送
-├── 安装定时任务.bat              # 注册 Windows 定时任务
-├── 安装定时任务.ps1              # PowerShell 安装脚本
-├── 启动自动日报.bat              # 被定时任务调用
-├── 启动日报Agent.bat             # 精准模式入口
-├── 一键搜索.md                   # 高精度搜索提示词
-└── CLAUDE.md                    # Claude Code 项目指引
+# Score jobs
+curl -X POST http://127.0.0.1:5000/api/calculate_match_score \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{"resume_text":"Python SQL ML...","jobs":[{"title":"DA Intern","description":"..."}]}'
 ```
 
-## 搜索范围
+### Management
+```bash
+# Model versions
+curl http://127.0.0.1:5000/api/models -H "Authorization: Bearer TOKEN"
 
-| 区域 | 城市 |
-|------|------|
-| 河北省内 | 石家庄、保定、唐山、雄安 |
-| 周边 | 北京、天津 |
+# Switch active model
+curl -X POST http://127.0.0.1:5000/api/models/switch \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{"name":"job_match_v003"}'
 
-| 岗位方向 | 关键词 |
-|----------|--------|
-| 数据科学 | `数据科学` `数据分析` `大数据` |
+# Tasks list
+curl http://127.0.0.1:5000/api/tasks -H "Authorization: Bearer TOKEN"
 
-| 官方直搜 | 公司 |
-|----------|------|
-| 8 家大厂 | 字节跳动、美团、百度、京东、腾讯、快手、小米、华为 |
-
-## 日报示例
-
-```markdown
-📊 搜索结果汇总表
-| 公司 | 岗位 | 地点 | 数据来源 | 双休 | 住宿 | 薪资 | 匹配 |
-|------|------|------|----------|:---:|:---:|:---:|:---:|
-| 京东 | JD YOUNG数据 | 北京 | 官方招聘 | ❌ | ✅ | ✅ | ⭐⭐ |
-| 快手 | 数据分析实习生 | 北京 | 官方招聘 | ❌ | ❌ | ❌ | ⭐ |
-
-📈 与昨日对比
-| 🆕 新增 2 | ❌ 已下架 1 | ➖ 不变 5 |
+# Environment check
+curl http://127.0.0.1:5000/api/browser-check -H "Authorization: Bearer TOKEN"
 ```
 
-## 许可证
+---
+
+## MCP Tools (Claude Code)
+
+| Tool | Description |
+|------|-------------|
+| `search_jobs` | Search jobs across recruitment sites |
+| `apply_job` | Auto-fill application forms |
+| `scrape_to_csv` | Scrape listings → CSV |
+| `take_screenshot` | Screenshot a URL |
+| `browser_status` | Check browser environment |
+| `train_job_match_model` | Train PyTorch BiLSTM match model |
+| `get_job_match_score` | Batch score jobs, return sorted |
+
+---
+
+## Project Structure
+
+```
+job_agent/
+├── web_server.py              # Flask dashboard + REST API
+├── job_browser.py             # browser-use automation core
+├── job_browser_web.py         # Flask blueprint (/api/*)
+├── mcp_job_server.py          # MCP server (7 tools)
+├── daily_job_search.py        # Precise report mode
+├── daily_job_search_quick.py  # Quick/auto report mode
+├── report_utils.py            # Shared utilities (dedup/diff/jobhunt)
+├── send_email.py              # QQ SMTP email sender
+├── db/
+│   ├── database.py            # SQLite CRUD (jobs/tasks/models/logs)
+│   └── schema.sql             # DDL
+├── tf_match_model/
+│   ├── data_pipeline.py       # Multi-source data → training data
+│   ├── train.py               # PyTorch BiLSTM trainer
+│   ├── inference.py           # Model loading + inference
+│   ├── model_storage/         # .pt weights
+│   └── vocab.txt              # Vocabulary cache
+├── utils/
+│   ├── logger.py              # File + console logging
+│   ├── rate_limiter.py        # Token bucket rate limiter
+│   └── browser_anti_detect.py # Random UA/delay/window/chunking
+├── logs/                      # Runtime logs
+├── start_all.bat              # One-click launcher
+└── requirements_browser.txt   # Python deps
+```
+
+---
+
+## Cost Discipline (LLM Scheduling)
+
+| Layer | Model | Task | When |
+|-------|-------|------|------|
+| L1 | **DeepSeek** | JD denoising, keyword extraction, data augmentation | Data pipeline |
+| L2 | **PyTorch (local)** | BiLSTM training + inference | Training / each query |
+| L3 | **Claude** | Training metric analysis, strategy advice | After training only |
+| L4 | **PyTorch (local)** | Match scoring | Each query |
+
+**No unnecessary Claude calls.** DeepSeek handles bulk text preprocessing (cheaper). Claude is used only for post-training analysis (~1 call per training session).
+
+---
+
+## License
 
 MIT

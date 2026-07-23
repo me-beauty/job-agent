@@ -1,0 +1,36 @@
+{
+  "_comment": "简历模板 — 填写后用于自动投递。敏感信息已脱敏，请替换为真实数据。",
+  "personal": {
+    "first_name": "张",
+    "last_name": "三",
+    "email": "your_email@example.com",
+    "phone": "138-0000-0000",
+    "age": "22",
+    "city": "石家庄",
+    "province": "河北",
+    "address": "河北省石家庄市某某区某某路123号"
+  },
+  "education": {
+    "school": "某某大学",
+    "degree": "本科",
+    "major": "数据科学与大数据技术",
+    "grad_year": "2027",
+    "gpa": "3.5/4.0"
+  },
+  "skills": [
+    "Python", "SQL", "数据分析",
+    "Pandas", "NumPy", "Scikit-learn",
+    "数据可视化 (Matplotlib, ECharts)",
+    "Hadoop/Spark 基础", "机器学习基础"
+  ],
+  "job_prefs": {
+    "target_role": "数据科学实习生 / 数据分析实习生",
+    "target_locations": ["石家庄", "保定", "唐山", "雄安", "北京", "天津"],
+    "available_start": "2026-09",
+    "duration_months": 4,
+    "work_days_per_week": 5,
+    "expected_salary": "3000-5000元/月"
+  },
+  "resume_path": "D:/Projects/me_create/job_agent/resume.pdf",
+  "cover_letter_template": "尊敬的招聘负责人：\n\n您好！我是{university}{major}专业{grad_year}届本科生，对{company}的{position}岗位非常感兴趣。\n\n在校期间，我系统学习了数据科学相关课程，熟练使用Python进行数据分析和建模。曾参与{project_desc}，具备良好的数据处理和分析能力。\n\n我每周可实习5天，实习时长4个月以上，期望在{location}工作。期待有机会加入{company}团队！\n\n此致\n敬礼\n{name}\n{date}"
+}

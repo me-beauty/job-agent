@@ -12,6 +12,9 @@ daily_report_*.md
 # Error logs
 *.log
 
+# Environment / secrets (contains API keys!)
+.env
+
 # IDE / editor
 .vscode/
 .idea/
@@ -19,3 +22,20 @@ daily_report_*.md
 # OS
 Thumbs.db
 Desktop.ini
+
+# Virtual environment
+venv/
+
+# Runtime data (large / regeneratable)
+model/vector_data/
+model/model_storage/
+model/chroma_data/
+logs/
+
+# Temp / debug files
+nul
+server_output.txt
+_train_worker.py
+train_debug.log
+data_pipeline_called.log
+train_model_called.log

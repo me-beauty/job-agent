@@ -1,0 +1,214 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>Job Agent - 求职助手</title><style>
+:root{--bg:#f5f6fa;--card:#fff;--text:#1e1e2e;--muted:#8a8fa0;--purple:#667eea;--purple2:#764ba2;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--radius:12px;--shadow:0 1px 6px rgba(0,0,0,.06)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Microsoft YaHei','PingFang SC',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.container{max-width:800px;margin:0 auto;padding:16px}
+.header{background:linear-gradient(135deg,var(--purple),var(--purple2));color:#fff;padding:20px 24px;border-radius:var(--radius);margin-bottom:16px}
+.header h1{font-size:22px;font-weight:800}
+.header .sub{font-size:13px;opacity:.85;margin-top:4px}
+.tabs{display:flex;gap:0;background:var(--card);border-radius:var(--radius);margin-bottom:16px;box-shadow:var(--shadow);overflow:hidden}
+.tab{flex:1;text-align:center;padding:14px 8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;transition:all .2s;user-select:none}
+.tab:hover{background:#f8f9fc}
+.tab.active{color:var(--purple);border-bottom-color:var(--purple)}
+.tab .tab-num{display:block;font-size:20px;margin-bottom:2px}
+.card{background:var(--card);border-radius:var(--radius);padding:20px 24px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card h3{font-size:14px;margin-bottom:4px}
+.card .desc{font-size:11px;color:var(--muted);margin-bottom:14px}
+.frm-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.frm-row input,.frm-row select,.frm-row textarea{flex:1;min-width:120px;padding:10px 12px;border:1.5px solid #e0e3eb;border-radius:8px;font-size:13px;font-family:inherit;outline:none;transition:border .15s}
+.frm-row input:focus,.frm-row select:focus,.frm-row textarea:focus{border-color:var(--purple)}
+textarea{resize:vertical;min-height:80px;width:100%;padding:10px 12px;border:1.5px solid #e0e3eb;border-radius:8px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;text-decoration:none;transition:all .15s}
+.btn-primary{background:linear-gradient(135deg,var(--purple),var(--purple2));color:#fff;width:100%}
+.btn-primary:hover{opacity:.9}
+.btn-ghost{background:#f0f2f5;color:var(--text);font-size:11px;padding:6px 12px}
+.btn-ghost:hover{background:#e0e3eb}
+.result-box{margin-top:12px;font-size:12px;max-height:420px;overflow-y:auto}
+.result-box table{width:100%;border-collapse:collapse;font-size:11px}
+.result-box th{background:#f0f2f5;padding:8px 6px;text-align:left;font-size:10px;color:var(--muted);position:sticky;top:0}
+.result-box td{padding:6px;border-bottom:1px solid #f0f1f5}
+.badge{display:inline-block;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:600}
+.badge-ok{background:#dcfce7;color:#166534}.badge-err{background:#fecdd3;color:#991b1b}
+.status-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.status-item{flex:1;min-width:100px;background:#f8f9fc;border-radius:8px;padding:12px;text-align:center}
+.status-item .num{font-size:24px;font-weight:800}
+.status-item .label{font-size:10px;color:var(--muted);margin-top:2px}
+.report-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f1f5;font-size:12px}
+.report-row a{color:var(--text);text-decoration:none}
+.report-row a:hover{color:var(--purple)}
+.empty-state{text-align:center;padding:20px;color:var(--muted);font-size:12px}
+.footer{text-align:center;font-size:10px;color:#ccc;padding:20px 0}
+.panel{display:none}
+.panel.active{display:block}
+.help-tip{background:#fffbeb;border-left:3px solid var(--amber);border-radius:6px;padding:10px 14px;font-size:11px;color:#92400e;margin-bottom:14px}
+a{color:var(--purple);text-decoration:none}
+</style></head><body><div class="container">
+
+<div class="header"><h1>🤖 Job Agent 求职助手</h1><div class="sub">面向数据科学/计算机应届生 · 搜岗 + AI匹配</div></div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab(0)" id="tab0"><span class="tab-num">①</span>搜索岗位</div>
+  <div class="tab" onclick="switchTab(1)" id="tab1"><span class="tab-num">②</span>智能匹配</div>
+  <div class="tab" onclick="switchTab(2)" id="tab2"><span class="tab-num">③</span>系统状态</div>
+</div>
+
+<div class="panel active" id="panel0">
+  <div class="help-tip">💡 <b>第①步：搜索岗位</b> — 选择关键词和城市，系统自动搜索并保存。搜完后点顶部<b>「② 智能匹配」</b>继续。</div>
+  <div class="card">
+    <h3>🔍 搜索实习岗位</h3>
+    <div class="desc">选择关键词和城市</div>
+    <div class="frm-row">
+      <select id="kw" onchange="var c=document.getElementById('kwCustom');c.style.display=this.value==='__custom__'?'block':'none'">
+        <option value="数据分析实习">数据分析实习</option>
+        <option value="大数据开发实习">大数据开发实习</option>
+        <option value="Python实习">Python实习</option>
+        <option value="数据科学实习">数据科学实习</option>
+        <option value="机器学习实习">机器学习实习</option>
+        <option value="AI算法实习">AI算法实习</option>
+        <option value="后端开发实习">后端开发实习</option>
+        <option value="__custom__">✏️ 自定义关键词…</option>
+      </select>
+      <input id="kwCustom" placeholder="输入关键词" style="display:none">
+      <select id="city"><option value="石家庄">石家庄</option><option value="北京">北京</option><option value="天津">天津</option><option value="保定">保定</option><option value="唐山">唐山</option><option value="廊坊">廊坊</option><option value="雄安">雄安</option></select>
+    </div>
+    <div style="display:flex;gap:16px;font-size:12px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="chkGrad" checked> 校招/应届</label>
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="chkDorm"> 提供住宿</label>
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="chkWeekend"> 双休</label>
+    </div>
+    <button class="btn btn-primary" onclick="doSearch()">🚀 开始搜索</button>
+    <div class="result-box" id="searchResult"></div>
+  </div>
+</div>
+
+<div class="panel" id="panel1">
+  <div class="help-tip">💡 <b>第②步：智能匹配</b> — 输入你的技能描述，AI 给每个岗位打分排名。必须有岗位数据（先完成第①步）。分数低可以点「训练模型」优化。</div>
+  <div class="card">
+    <h3>🧠 AI 智能匹配</h3>
+    <div class="desc">输入你的技能或简历描述</div>
+    <textarea id="resumeInput" placeholder="例如：Python SQL 数据分析 Pandas NumPy 数据可视化 2027届数据科学本科 找石家庄或北京实习 双休"></textarea>
+    <button class="btn btn-primary" onclick="doMatch()" style="margin-bottom:10px">📊 开始匹配推荐</button>
+    <button class="btn" style="background:#f0f2f5;width:100%;font-size:11px" onclick="doTrain()">⚡ 训练/更新 AI 模型（约1-2分钟）</button>
+    <div class="result-box" id="matchResult"></div>
+    <div class="result-box" id="trainResult" style="margin-top:6px"></div>
+  </div>
+</div>
+
+<div class="panel" id="panel2">
+  <div class="card">
+    <h3>📊 系统概览</h3>
+    <div class="status-row">
+      <div class="status-item"><div class="num">{job_total}</div><div class="label">入库岗位</div></div>
+      <div class="status-item"><div class="num">{model_count}</div><div class="label">模型版本</div></div>
+      <div class="status-item"><div class="num">{report_count}</div><div class="label">日报</div></div>
+      <div class="status-item"><div class="num" style="color:{model_ready_color}">{model_ready_text}</div><div class="label">匹配模型</div></div>
+    </div>
+    <div id="queueMini" style="font-size:11px;color:var(--muted)">⏳ 加载中…</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px">激活模型: {active_model}</div>
+  </div>
+  <div class="card">
+    <h3>📋 日报列表</h3>
+    {report_rows}
+  </div>
+</div>
+
+<div class="footer">Job Agent · 智能求职助手</div></div>
+
+<script>
+var TOKEN="?token=job-agent-demo-token";
+function switchTab(n){for(var i=0;i<3;i++){document.getElementById("tab"+i).classList.toggle("active",i===n);document.getElementById("panel"+i).classList.toggle("active",i===n)}if(n===2)refreshStatus()}
+var searchTimer=null;
+
+async function doSearch(){
+  var el=document.getElementById("searchResult");
+  var kw=document.getElementById("kw").value;
+  if(kw==="__custom__")kw=document.getElementById("kwCustom").value;
+  if(!kw.trim()){el.innerHTML="<div class=empty-state>❌ 请输入关键词</div>";return}
+  var city=document.getElementById("city").value;
+  var extra="";
+  if(document.getElementById("chkGrad").checked) extra+=" 校招";
+  if(document.getElementById("chkDorm").checked) extra+=" 住宿";
+  if(document.getElementById("chkWeekend").checked) extra+=" 双休";
+  el.innerHTML="<div class=empty-state>⏳ 搜索中…（约10-20秒）</div>";
+  try{
+    var r=await fetch("/api/search"+TOKEN,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({keyword:kw+extra,city:city})});
+    var d=await r.json();
+    if(!r.ok){el.innerHTML="<div class=empty-state>❌ "+(d.error||"请求失败")+"</div>";return}
+    var tid=d.task_id;
+    el.innerHTML="<div class=empty-state>⏳ 任务 "+tid+" 等待完成…</div>";
+    if(searchTimer)clearInterval(searchTimer);
+    searchTimer=setInterval(async function(){
+      var r2=await fetch("/api/task/"+tid+TOKEN);
+      var d2=await r2.json();
+      if(d2.status==="done"){
+        clearInterval(searchTimer);
+        var result=d2.result;
+        if(typeof result==="string")try{result=JSON.parse(result)}catch(e){}
+        var jobs=result.jobs||[];
+        if(jobs.length===0){el.innerHTML="<div class=empty-state>✅ 搜索完成，未找到岗位。换关键词试试。</div>";return}
+        var h="<p style='margin-bottom:6px'>✅ 找到 <b>"+jobs.length+"</b> 个岗位，已自动入库 + 入向量库</p>";
+        h+="<p style='font-size:10px;color:var(--muted);margin-bottom:8px'>👉 现在去 <a href='#' onclick='switchTab(1);return false'>② 智能匹配</a> 输入简历进行匹配</p>";
+        h+="<table><tr><th>公司</th><th>岗位</th><th>地点</th><th>薪资</th><th>来源</th><th>投递</th></tr>";
+        for(var j=0;j<Math.min(jobs.length,15);j++){var job=jobs[j];h+="<tr><td>"+(job.company||"?")+"</td><td>"+(job.title||job.position||"?")+"</td><td>"+(job.location||"?")+"</td><td>"+(job.salary||"?")+"</td><td>"+(job.source||"?")+"</td><td>"+jobApplyLink(job)+"</td></tr>"}
+        h+="</table>";el.innerHTML=h;
+      }else if(d2.status==="error"){clearInterval(searchTimer);el.innerHTML="<div class=empty-state>❌ 搜索失败，请重试</div>"}
+    },2000);
+  }catch(e){el.innerHTML="<div class=empty-state>❌ 网络错误</div>"}
+}
+
+async function doMatch(){
+  var el=document.getElementById("matchResult");
+  var resume=document.getElementById("resumeInput").value.trim();
+  if(!resume){el.innerHTML="<div class=empty-state>❌ 请先输入技能描述</div>";return}
+  el.innerHTML="<div class=empty-state>⏳ AI 正在匹配…</div>";
+  try{
+    var r=await fetch("/api/vector/semantic"+TOKEN,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({resume_text:resume,top_k:15,min_similarity:0.01})});
+    var d=await r.json();
+    if(!r.ok||!d.scores||d.scores.length===0){el.innerHTML="<div class=empty-state>❌ 没有匹配结果。请先去第①步搜索岗位，再回来匹配。</div>";return}
+    var h="<p style='margin-bottom:6px'>📊 从 "+d.stages.recall_candidates+" 个候选中匹配 <b>"+d.count+"</b> 个推荐</p>";
+    h+="<table><tr><th>#</th><th>分数</th><th>标签</th><th>公司</th><th>岗位</th><th>城市</th><th>投递</th></tr>";
+    for(var i=0;i<Math.min(d.scores.length,12);i++){
+      var s=d.scores[i];var sc=s.match_score||0;
+      var tag=s.is_local?"本地":(s.is_nearby?"北京":"");
+      h+="<tr><td>"+(i+1)+"</td><td><b>"+sc.toFixed(0)+"</b> "+s.stars+"</td><td style='color:var(--green);font-size:10px'>"+tag+"</td><td>"+(s.company||"?")+"</td><td>"+(s.title||"?")+"</td><td>"+(s.location||"?")+"</td><td>"+jobApplyLink(s)+"</td></tr>";
+    }
+    h+="</table><p style='font-size:10px;color:var(--muted);margin-top:6px'>💡 向量粗召回→BiLSTM精排。「本地」=工作地在目标城市，「北京」=北京大厂。</p>";el.innerHTML=h;
+  }catch(e){el.innerHTML="<div class=empty-state>❌ 匹配失败："+e.message+"</div>"}
+}
+
+async function doTrain(){
+  var el=document.getElementById("trainResult");
+  el.innerHTML="<div class=empty-state>⏳ 正在训练 AI 模型（约 1-2 分钟）…</div>";
+  try{
+    var r=await fetch("/api/train_match_model"+TOKEN,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({epochs:15,lr:0.003})});
+    var d=await r.json();
+    var tid=d.task_id;
+    el.innerHTML="<div class=empty-state>⏳ 训练已启动 ("+tid+") 等待…</div>";
+    var timer=setInterval(async function(){
+      var r2=await fetch("/api/task/"+tid+TOKEN);
+      var d2=await r2.json();
+      if(d2.status==="done"){clearInterval(timer);
+        var result=d2.result;if(typeof result==="string")try{result=JSON.parse(result)}catch(e){}
+        el.innerHTML="<div class=empty-state>✅ 训练完成！<br>模型: "+(result.model_name||tid)+" | MAE:"+(result.val_mae||"?")+" | 准确率:"+((result.accuracy||0)*100).toFixed(1)+"%<br>可以 <a href='#' onclick='doMatch();return false'>重新匹配</a> 看效果</div>";
+      }else if(d2.status==="error"){clearInterval(timer);el.innerHTML="<div class=empty-state>❌ 训练失败，请重试</div>"}
+    },3000);
+  }catch(e){el.innerHTML="<div class=empty-state>❌ 网络错误："+e.message+"</div>"}
+}
+
+async function refreshStatus(){
+  try{var r=await fetch("/api/queue/stats"+TOKEN);var d=await r.json();var q=d.queue||{};document.getElementById("queueMini").innerHTML="队列: "+q.queued+" 排队 / "+q.running+" 运行中 · 优先级: 训练>搜索>爬虫"}catch(e){}
+}
+refreshStatus();
+setInterval(refreshStatus,30000);
+function jobApplyLink(job){
+  var url=job.url||job.career_url||"";
+  var company=job.company||"";
+  var title=job.title||job.position||"";
+  if(url && url.length>5){
+    return "<a href='"+url+"' target='_blank' title='打开"+company+"招聘官网' style='color:var(--purple);font-weight:600;font-size:11px'>投简历</a>";
+  }
+  var q=encodeURIComponent(company+" "+title+" 校园招聘 投递");
+  return "<a href='https://www.baidu.com/s?wd="+q+"' target='_blank' style='color:var(--amber);font-size:10px'>搜投递</a>";
+}
+</script></body></html>
